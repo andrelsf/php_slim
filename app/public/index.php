@@ -33,16 +33,22 @@ $app->get('/', function (Request $request, Response $response, $args){
                             ->withStatus(200);
 });
 
+$app->get('/api/users', function (Request $request, Response $response, $args) {
+    $payload = json_encode(array('status' => 'success', 'message' => 'pong'));
+    $response->getBody()->write($payload);
+    return $response->withHeader('Content-Type', 'application/json')
+                            ->withStatus(200);
+});
+
 $app->post('/api/users', function (Request $request, Response $response, $args) {
-    $_input = (object) $request->getParams();
-    $_email = $_input->email;
-    $_passwd = $_input->passwd;
+    $input = $request->getBody()->getContents();
+    $input = json_decode($input);
+    $email = $input->email;
+    $passwd = $input->passwd;
     $rsp = array();
-    var_dump($_input);
-    exit;
-    if(!empty($_email && !empty($_passwd))){
+    if(!empty($email && !empty($passwd))){
         $rsp['error'] = false;
-        $rsp['message'] = "Email: ".$_email." | Password: ".$_passwd;
+        $rsp['message'] = "Email: ".$email." | Password: ".$passwd;
     } else {
         $rsp['error'] = false;
         $rsp['message'] = "You have not posted any data";
@@ -50,8 +56,8 @@ $app->post('/api/users', function (Request $request, Response $response, $args) 
     $payload = json_encode($rsp);
     $response->getBody()->write($payload);
     return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(201);
+              ->withHeader('Content-Type', 'application/json')
+              ->withStatus(201);
 });
 
 $app->run();
