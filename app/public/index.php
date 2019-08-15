@@ -25,14 +25,28 @@ $app->addRoutingMiddleware();
  */
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
 
+/**
+ * /api/users       GET     Busca todos os usuários.
+ * /api/registry    POST    Registra um novo usuário.
+ * /api/user/<:id>  PUT     UPDATE usuario.
+ * /api/login       POST    Login do usuário.
+ * /api/logout      GET     Logout do usuário.
+ */
+
+/**
+ * / somente para retornar versão do app
+ */
 $app->get('/', function (Request $request, Response $response, $args){
-    $data = array('status' => 'success', 'message' => 'pong');
+    $data = array('status' => 'success', 'version' => '1.0');
     $payload = json_encode($data);
     $response->getBody()->write($payload);
     return $response->withHeader('Content-Type', 'application/json')
                             ->withStatus(200);
 });
 
+/**
+ * /api/users
+ */
 $app->get('/api/users', function (Request $request, Response $response, $args) {
     $payload = json_encode(array('status' => 'success', 'message' => 'pong'));
     $response->getBody()->write($payload);
@@ -40,24 +54,81 @@ $app->get('/api/users', function (Request $request, Response $response, $args) {
                             ->withStatus(200);
 });
 
-$app->post('/api/users', function (Request $request, Response $response, $args) {
-    $input = $request->getBody()->getContents();
-    $input = json_decode($input);
-    $email = $input->email;
-    $passwd = $input->passwd;
-    $rsp = array();
-    if(!empty($email && !empty($passwd))){
+/**
+ * /api/registry
+ */
+$app->post('/api/registry', function (Request $request, Response $response, $args) {
+    $post_data = json_decode(
+        $request->getBody()->getContents()
+    );
+    $rsp = array('error' => true, 'message' => 'email or passwod is empty.');
+    if (isset($post_data->email) && isset($post_data->passwd)) {
+        $email = $post_data->email;
+        $password = generate_password($post_data->passwd);
+        //TODO usar o entity doctrine para registrar em banco
         $rsp['error'] = false;
-        $rsp['message'] = "Email: ".$email." | Password: ".$passwd;
-    } else {
-        $rsp['error'] = false;
-        $rsp['message'] = "You have not posted any data";
+        $rsp['status'] = 'success';
+        $rsp['message'] = 'Email registred with success.';
+        $payload = json_encode($rsp);
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json')
+                        ->withStatus(201);
     }
+    $rsp['error'] = true;
+    $rsp['status'] = 'fail';
+    $rsp['message'] = 'email or password registred with success.';
     $payload = json_encode($rsp);
     $response->getBody()->write($payload);
-    return $response
-              ->withHeader('Content-Type', 'application/json')
-              ->withStatus(201);
+    return $response->withHeader('Content-Type', 'application/json')
+                ->withStatus(400);
 });
+
+$app->put('/api/user/{id}', function (Request $request, Response $response, $args) {
+    $id = $args['id'];
+    $rsp = array('status' => 'success', 'message' => 'User modifing ID: '.$id);
+    $payload = json_encode($rsp);
+    $response->getBody()->write($payload);
+    return $response->withHeader('Content-Type', 'application/json')
+                    ->withStatus(201);    
+});
+
+/**
+ * /api/login
+ */
+$app->post('/api/login', function (Request $request, Response $response, $args) {
+    $post_data = json_decode(
+        $request->getBody()->getContents()
+    );
+    $rsp = array('error' => true, 'message' => 'email or passwod is empty.');
+    if (isset($post_data->email) && isset($post_data->passwd)) {
+        $email = $post_data->email;
+        $password = generate_password($post_data->passwd);
+        //TODO usar o entity doctrine para validar password e usuario em banco
+        //TODO retornar sessão de login para usuario
+        $rsp['error'] = false;
+        $rsp['status'] = 'success';
+        $rsp['message'] = 'Email registred with success.';
+        $payload = json_encode($rsp);
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json')
+                        ->withStatus(201);
+    }
+    $rsp['error'] = true;
+    $rsp['status'] = 'fail';
+    $rsp['message'] = 'email or password registred with success.';
+    $payload = json_encode($rsp);
+    $response->getBody()->write($payload);
+    return $response->withHeader('Content-Type', 'application/json')
+                ->withStatus(400);
+});
+
+/**
+ * /api/logout TODO
+ */
+
+function generate_password($password) {
+    $hash_passwd = hash("sha256", $password);
+    return $hash_passwd;
+};
 
 $app->run();

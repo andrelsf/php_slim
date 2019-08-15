@@ -20,4 +20,14 @@ $ composer require guzzlehttp/psr7 http-interop/http-factory-guzzle
 $ composer require zendframework/zend-diactoros
 ```
 
+## EndPoints
 
+```
+/**
+ * /api/users       GET     Busca todos os usuários.
+ * /api/registry    POST    Registra um novo usuário.
+ * /api/user/<:id>  PUT     UPDATE usuario.
+ * /api/login       POST    Login do usuário.
+ * /api/logout      GET     Logout do usuário.
+ */
+```
